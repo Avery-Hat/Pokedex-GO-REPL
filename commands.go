@@ -64,6 +64,11 @@ func init() {
 			description: "Inspect a caught Pokémon: inspect <name>",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List all caught Pokémon",
+			callback:    commandPokedex,
+		},
 	}
 }
 
@@ -170,6 +175,7 @@ func commandCatch(cfg *config, args []string) error {
 		}
 		cfg.pokedex[mon.Name] = mon
 		fmt.Printf("%s was caught!\n", mon.Name)
+		fmt.Println("You may now inspect it with the inspect command.")
 	} else {
 		fmt.Printf("%s escaped!\n", mon.Name)
 	}
@@ -206,6 +212,27 @@ func commandInspect(cfg *config, args []string) error {
 	// types are already in slot order from the API
 	for _, t := range mon.Types {
 		fmt.Printf("  - %s\n", t.Type.Name)
+	}
+	return nil
+}
+
+func commandPokedex(cfg *config, _ []string) error {
+	fmt.Println("Your Pokedex:")
+
+	if len(cfg.pokedex) == 0 {
+		// Print nothing else (assignment doesn't specify empty text)
+		return nil
+	}
+
+	// stable output
+	names := make([]string, 0, len(cfg.pokedex))
+	for name := range cfg.pokedex {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, n := range names {
+		fmt.Printf(" - %s\n", n)
 	}
 	return nil
 }

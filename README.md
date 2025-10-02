@@ -1,6 +1,6 @@
-# Pokedex CLI — Map & Explore Quickstart
+# Pokedex CLI — Map, Explore, Catch & Inspect
 
-This CLI lets you browse Pokémon **location areas** and explore which Pokémon appear in each area using the public [PokeAPI](https://pokeapi.co/).
+This CLI lets you browse Pokémon **location areas**, explore which Pokémon appear there, and build a personal **Pokédex** using the public [PokeAPI](https://pokeapi.co/).
 
 ## Run
 
@@ -53,7 +53,7 @@ you're on the first page
 
 ### `explore <area-name>` — list Pokémon in an area
 
-Pass any area name you saw from `map`/`mapb`.
+Pass any area name you saw from `map`/`mapb` (use it **exactly** as shown).
 
 ```text
 Pokedex > explore pastoria-city-area
@@ -71,10 +71,65 @@ Found Pokemon:
  - gastrodon
 ```
 
+### `catch <pokemon-name>` — try to catch a Pokémon
+
+Uses the Pokémon endpoint and a catch roll (harder if base experience is high).
+
+```text
+Pokedex > catch pikachu
+Throwing a Pokeball at pikachu...
+pikachu escaped!
+
+Pokedex > catch pikachu
+Throwing a Pokeball at pikachu...
+pikachu was caught!
+You may now inspect it with the inspect command.
+```
+
+Tip: multiword names should use dashes (e.g., `mr-mime`). The CLI accepts `mr mime` too and converts it.
+
+### `inspect <pokemon-name>` — show details for a caught Pokémon
+
+Prints name, height, weight, stats, and types **from your local Pokédex** (no API call).
+
+```text
+Pokedex > inspect pidgey
+you have not caught that pokemon
+
+Pokedex > catch pidgey
+Throwing a Pokeball at pidgey...
+pidgey was caught!
+You may now inspect it with the inspect command.
+
+Pokedex > inspect pidgey
+Name: pidgey
+Height: 3
+Weight: 18
+Stats:
+  - hp: 40
+  - attack: 45
+  - defense: 40
+  - special-attack: 35
+  - special-defense: 35
+  - speed: 56
+Types:
+  - normal
+  - flying
+```
+
+### `pokedex` — list everything you’ve caught
+
+```text
+Pokedex > pokedex
+Your Pokedex:
+ - caterpie
+ - pidgey
+```
+
 ## Tips
 
-* **Case-insensitive input:** Commands and area names are normalized to lowercase.
-* **Caching:** The first fetch of a page/area may pause briefly (network). Re-running `mapb` or re-exploring the same area should be **instant** thanks to the cache.
+* **Case-insensitive input:** Commands and names are normalized to lowercase.
+* **Caching:** The first fetch of a page/area/Pokémon may pause briefly (network). Repeating the same request should be **instant** thanks to the cache.
 * **Help & exit:**
 
   * `help` — shows available commands
@@ -86,7 +141,7 @@ Found Pokemon:
 go run . | tee repl.log
 ```
 
-You can later search it, e.g.:
+Search later:
 
 ```bash
 grep -i "forest" repl.log

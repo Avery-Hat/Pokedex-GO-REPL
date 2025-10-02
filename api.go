@@ -104,6 +104,68 @@ func fetchLocationAreaDetailCached(cache *pokecache.Cache, area string) (locatio
 	return out, nil
 }
 
+type Pokemon struct {
+	Name           string `json:"name"`
+	BaseExperience int    `json:"base_experience"`
+	Height         int    `json:"height"`
+	Weight         int    `json:"weight"`
+	Stats          []struct {
+		BaseStat int `json:"base_stat"`
+		Stat     struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"stat"`
+	} `json:"stats"`
+	Types []struct {
+		Slot int `json:"slot"`
+		Type struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"type"`
+	} `json:"types"`
+}
+
+func fetchPokemonCached(cache *pokecache.Cache, name string) (Pokemon, error) {
+	var out Pokemon
+	if name == "" {
+		return out, fmt.Errorf("pokemon name required")
+	}
+
+	url := "https://pokeapi.co/api/v2/pokemon/" + name
+
+	// cache hit?
+	if b, ok := cache.Get(url); ok {
+		if err := json.Unmarshal(b, &out); err != nil {
+			return out, fmt.Errorf("cache unmarshal failed: %w", err)
+		}
+		return out, nil
+	}
+
+	// network
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return out, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return out, fmt.Errorf("non-OK HTTP status: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return out, err
+	}
+
+	// store + decode
+	cache.Add(url, body)
+	if err := json.Unmarshal(body, &out); err != nil {
+		return out, err
+	}
+	return out, nil
+}
+
 // shared helper
 func strptr(p *string) string {
 	if p == nil {

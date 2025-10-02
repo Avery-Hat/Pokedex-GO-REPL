@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"sort"
 	"strings"
@@ -11,18 +12,19 @@ import (
 )
 
 type config struct {
-	next  string
-	prev  string
-	cache *pokecache.Cache
+	next    string
+	prev    string
+	cache   *pokecache.Cache
+	pokedex map[string]Pokemon // caught mons by name
 }
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config, []string) error // <-- now accepts args
+	callback    func(*config, []string) error
 }
 
-// Declare first (no initializer) to avoid init cycles.
+// Declare first to avoid init cycles.
 var commands map[string]cliCommand
 
 func init() {
@@ -52,6 +54,16 @@ func init() {
 			description: "Explore a location area: explore <area_name>",
 			callback:    commandExplore,
 		},
+		"catch": {
+			name:        "catch",
+			description: "Try to catch a Pokémon: catch <name>",
+			callback:    commandCatch,
+		},
+		"inspect": { //newly added
+			name:        "inspect",
+			description: "Inspect a caught Pokémon: inspect <name>",
+			callback:    commandInspect,
+		},
 	}
 }
 
@@ -66,7 +78,6 @@ func commandHelp(_ *config, _ []string) error {
 	fmt.Println("Usage:")
 	fmt.Println()
 
-	// Print "help" first, then others alphabetically (stable output).
 	if c, ok := commands["help"]; ok {
 		fmt.Printf("%s: %s\n", c.name, c.description)
 	}
@@ -121,18 +132,97 @@ func commandExplore(cfg *config, args []string) error {
 		fmt.Println("usage: explore <location-area-name>")
 		return nil
 	}
-	// Input already lowercased by cleanInput; join in case user wrote with spaces.
 	area := strings.TrimSpace(strings.Join(args, " "))
-
 	fmt.Printf("Exploring %s...\n", area)
 	detail, err := fetchLocationAreaDetailCached(cfg.cache, area)
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("Found Pokemon:")
 	for _, enc := range detail.PokemonEncounters {
 		fmt.Printf(" - %s\n", enc.Pokemon.Name)
 	}
 	return nil
+}
+
+// ---- NEW: catch ----
+
+func commandCatch(cfg *config, args []string) error {
+	if len(args) < 1 {
+		fmt.Println("usage: catch <pokemon-name>")
+		return nil
+	}
+	// allow "mr mime" -> "mr-mime"
+	name := strings.ToLower(strings.Join(args, "-"))
+
+	fmt.Printf("Throwing a Pokeball at %s...\n", name)
+
+	mon, err := fetchPokemonCached(cfg.cache, name)
+	if err != nil {
+		return err
+	}
+
+	// Higher base experience -> harder to catch
+	chance := catchChance(mon.BaseExperience)
+	if rand.Float64() < chance {
+		if cfg.pokedex == nil {
+			cfg.pokedex = make(map[string]Pokemon)
+		}
+		cfg.pokedex[mon.Name] = mon
+		fmt.Printf("%s was caught!\n", mon.Name)
+	} else {
+		fmt.Printf("%s escaped!\n", mon.Name)
+	}
+	return nil
+}
+
+func commandInspect(cfg *config, args []string) error {
+	if len(args) < 1 {
+		fmt.Println("usage: inspect <pokemon-name>")
+		return nil
+	}
+	// Allow “mr mime” or “Mr-Mime”
+	key := strings.ToLower(strings.Join(args, "-"))
+
+	// The pokedex is keyed by the API name (lowercase with dashes)
+	mon, ok := cfg.pokedex[key]
+	if !ok {
+		// try exact key if user typed exact API name already
+		mon, ok = cfg.pokedex[strings.ToLower(args[0])]
+	}
+	if !ok {
+		fmt.Println("you have not caught that pokemon")
+		return nil
+	}
+
+	fmt.Printf("Name: %s\n", mon.Name)
+	fmt.Printf("Height: %d\n", mon.Height)
+	fmt.Printf("Weight: %d\n", mon.Weight)
+	fmt.Println("Stats:")
+	for _, s := range mon.Stats {
+		fmt.Printf("  - %s: %d\n", s.Stat.Name, s.BaseStat)
+	}
+	fmt.Println("Types:")
+	// types are already in slot order from the API
+	for _, t := range mon.Types {
+		fmt.Printf("  - %s\n", t.Type.Name)
+	}
+	return nil
+}
+
+// Simple, reasonable catch curve:
+// baseExp=50  -> ~0.80
+// baseExp=100 -> ~0.70
+// baseExp=200 -> ~0.50
+// baseExp=300 -> ~0.30
+// baseExp>=400 -> clamp ~0.10
+func catchChance(baseExp int) float64 {
+	ch := 0.9 - (float64(baseExp) / 500.0)
+	if ch < 0.10 {
+		ch = 0.10
+	}
+	if ch > 0.90 {
+		ch = 0.90
+	}
+	return ch
 }

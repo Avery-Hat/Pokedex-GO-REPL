@@ -1,4 +1,4 @@
-// main.go (only the call changes)
+// main.go
 package main
 
 import (
@@ -14,7 +14,8 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	cfg := &config{
-		cache: pokecache.NewCache(5 * time.Second),
+		cache:   pokecache.NewCache(5 * time.Second),
+		pokedex: make(map[string]Pokemon),
 	}
 
 	for {
@@ -30,7 +31,7 @@ func main() {
 		}
 
 		cmdName := words[0]
-		args := words[1:] // <-- pass the rest to the callback
+		args := words[1:]
 		if cmd, ok := commands[cmdName]; ok {
 			if err := cmd.callback(cfg, args); err != nil {
 				fmt.Println("Error:", err)
@@ -39,4 +40,9 @@ func main() {
 		}
 		fmt.Println("Unknown command")
 	}
+	// error checker
+	if err := scanner.Err(); err != nil {
+		fmt.Println("read error:", err)
+	}
+
 }

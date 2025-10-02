@@ -1,4 +1,4 @@
-# Pokedex CLI — Map, Explore, Catch & Inspect
+# Pokedex CLI: Map, Explore, Catch & Inspect
 
 This CLI lets you browse Pokémon **location areas**, explore which Pokémon appear there, and build a personal **Pokédex** using the public [PokeAPI](https://pokeapi.co/).
 
@@ -18,7 +18,7 @@ Type commands and press **Enter**.
 
 ## Commands
 
-### `map` — list location areas (20 at a time)
+### `map`: list location areas (20 at a time)
 
 Shows the next page of 20 location areas each time you run it.
 
@@ -42,7 +42,7 @@ great-marsh-area-1
 ...
 ```
 
-### `mapb` — go back one page
+### `mapb`: go back one page
 
 If you’ve paged forward with `map`, use `mapb` to return to the previous 20.
 If you’re already on the first page, it prints:
@@ -51,7 +51,7 @@ If you’re already on the first page, it prints:
 you're on the first page
 ```
 
-### `explore <area-name>` — list Pokémon in an area
+### `explore <area-name>`: list Pokémon in an area
 
 Pass any area name you saw from `map`/`mapb` (use it **exactly** as shown).
 
@@ -71,7 +71,7 @@ Found Pokemon:
  - gastrodon
 ```
 
-### `catch <pokemon-name>` — try to catch a Pokémon
+### `catch <pokemon-name>`: try to catch a Pokémon
 
 Uses the Pokémon endpoint and a catch roll (harder if base experience is high).
 
@@ -88,7 +88,7 @@ You may now inspect it with the inspect command.
 
 Tip: multiword names should use dashes (e.g., `mr-mime`). The CLI accepts `mr mime` too and converts it.
 
-### `inspect <pokemon-name>` — show details for a caught Pokémon
+### `inspect <pokemon-name>`: show details for a caught Pokémon
 
 Prints name, height, weight, stats, and types **from your local Pokédex** (no API call).
 
@@ -117,7 +117,7 @@ Types:
   - flying
 ```
 
-### `pokedex` — list everything you’ve caught
+### `pokedex`: list everything you’ve caught
 
 ```text
 Pokedex > pokedex
@@ -132,8 +132,8 @@ Your Pokedex:
 * **Caching:** The first fetch of a page/area/Pokémon may pause briefly (network). Repeating the same request should be **instant** thanks to the cache.
 * **Help & exit:**
 
-  * `help` — shows available commands
-  * `exit` — quit the CLI
+  * `help`: shows available commands
+  * `exit`: quit the CLI
 
 ## Optional: log your session
 
